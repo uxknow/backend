@@ -9,43 +9,70 @@ import { Watchlist } from '../watchlist/models/watchlist.model';
 export class UsersService {
   constructor(@InjectModel(User) private readonly userRepository: typeof User) {}
 
-  async hashPassword (password) {
-    return bcrypt.hash(password, 10)
+  async hashPassword (password: string): Promise<string> {
+    try {
+      return bcrypt.hash(password, 10)
+    } catch(err) {
+      throw new Error(err)
+    }
   }
 
-  async findUserByEmail (email: string) {
-    return this.userRepository.findOne({where: {email: email}})
+  async findUserByEmail (email: string): Promise<User> {
+    try {
+      return this.userRepository.findOne({where: {email: email}, include: {
+        model: Watchlist,
+        required: false,
+      }})
+    } catch(err) {
+      throw new Error(err)
+    }
   }
 
  async createUser(createUserDto): Promise<CreateUserDto> {
-    createUserDto.password = await this.hashPassword(createUserDto.password)
-    await this.userRepository.create({
-      firstName: createUserDto.firstName,
-      username: createUserDto.username,
-      email: createUserDto.email,
-      password: createUserDto.password
-    })
-    return createUserDto
+    try {
+      createUserDto.password = await this.hashPassword(createUserDto.password)
+      await this.userRepository.create({
+        firstName: createUserDto.firstName,
+        username: createUserDto.username,
+        email: createUserDto.email,
+        password: createUserDto.password
+      })
+      return createUserDto
+    } catch(err) {
+      throw new Error(err)
+    }
   }
 
-  async publicUser(email: string) {
-    return this.userRepository.findOne({
-      where: {email},
-      attributes: {exclude: ['password']},
-      include: {
-        model: Watchlist,
-        required: false
-      }
-    })
+  async publicUser(email: string): Promise<User> {
+    try {
+      return this.userRepository.findOne({
+        where: {email},
+        attributes: {exclude: ['password']},
+        include: {
+          model: Watchlist,
+          required: false
+        }
+      })
+    } catch(err) {
+      throw new Error(err)
+    }
   }
 
   async updateUser(email: string, dto: UpdateUserDto): Promise<UpdateUserDto> {
-    await this.userRepository.update(dto, {where: {email}})
-    return dto
+    try {
+      await this.userRepository.update(dto, {where: {email}})
+      return dto
+    } catch(err) {
+      throw new Error(err)
+    }
   }
 
   async deleteUser(email: string): Promise<boolean> {
+   try {
     await this.userRepository.destroy({where: {email}})
     return true
+   } catch(err) {
+     throw new Error(err)
+   }
   }
 }
